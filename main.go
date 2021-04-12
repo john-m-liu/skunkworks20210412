@@ -48,21 +48,22 @@ func serve() {
 
 // https://docs.mongodb.com/manual/reference/command/collStats/#mongodb-dbcommand-dbcmd.collStats
 type CollStats struct {
-	Collection  string `bson:"ns"`
-	SizeData    int    `bson:"size"` // uncompressed
-	SizeStorage int    `bson:"storageSize"`
-	SizeIndices int    `bson:"totalIndexSize"`
-	SizeTotal   int    `bson:"totalSize"` // SizeStorage + SizeIndices
-	NumDocs     int    `bson:"count"`
-	NumIndices  int    `bson:"nindexes"`
+	Collection  string `bson:"ns" json:"collection"`
+	SizeData    int    `bson:"size" json:"size_data"` // uncompressed
+	SizeStorage int    `bson:"storageSize" json:"size_storage"`
+	SizeIndices int    `bson:"totalIndexSize" json:"size_indices"`
+	SizeTotal   int    `bson:"totalSize" json:"size_total"` // SizeStorage + SizeIndices
+	NumDocs     int    `bson:"count" json:"num_docs"`
+	NumIndices  int    `bson:"nindexes" json:"num_indices"`
 	// indexSizes
 }
 
 type Snapshot struct {
-	DB           string    `bson:"db"`
-	Collection   string    `bson:"collection"`
-	GatheredTime time.Time `bson:"gathered_time"`
-	Stats        CollStats `bson:"stats"`
+	DB               string    `bson:"db" json:"db"`
+	Collection       string    `bson:"collection" json:"collection"`
+	GatheredTime     time.Time `bson:"gathered_time" json:"gathered_time"`
+	GatheredTimeUnix int64     `json:"gathered_time_unix"`
+	Stats            CollStats `bson:"stats" json:"stats"`
 }
 
 func GetStats() CollStats {
@@ -76,12 +77,13 @@ func GetStats() CollStats {
 }
 
 func GetSnapshot() Snapshot {
+	now := time.Now()
 	stats := GetStats()
 	pieces := strings.Split(stats.Collection, ".")
 	snapshot := Snapshot{
 		DB:           pieces[0],
 		Collection:   pieces[1],
-		GatheredTime: time.Now(),
+		GatheredTime: now,
 		Stats:        stats,
 	}
 
@@ -104,6 +106,9 @@ func GetSnapshots(db, collection string) []Snapshot {
 	grip.Error(err)
 	snapshots := []Snapshot{}
 	grip.Error(cursor.All(ctx, &snapshots))
+	for i, s := range snapshots {
+		snapshots[i].GatheredTimeUnix = s.GatheredTime.Unix()
+	}
 	return snapshots
 }
 
@@ -111,5 +116,6 @@ func GetSnapshotsHandler(rw http.ResponseWriter, r *http.Request) {
 	data := GetSnapshots("foo", "collection1")
 	b, err := json.Marshal(data)
 	grip.Error(err)
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Write(b)
 }
