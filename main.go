@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/mongodb/amboy"
 	"github.com/mongodb/grip"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,10 +19,20 @@ var (
 	StatsDB *mongo.Client
 	TestDB  *mongo.Client
 	ctx     context.Context
+	q       amboy.Queue
+)
+
+const (
+	SnapshotDB         = "snapshots"
+	SnapshotCollection = "snapshots"
+	TestDBName         = "foo"
+	TestCollName       = "collection1"
 )
 
 func main() {
-	ctx = context.Background()
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 	opts := options.Client().ApplyURI(
 		"mongodb+srv://admin:<password>@skunkworks20210412.zgc06.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
 	).SetAuth(options.Credential{Username: "admin", Password: "ddfda"}).SetServerAPIOptions(&options.ServerAPIOptions{ServerAPIVersion: options.ServerAPIVersion1})
@@ -35,8 +47,22 @@ func main() {
 	grip.Error(err)
 	TestDB = client
 
-	// StoreSnapshot()
-	// grip.Info(GetSnapshots("foo", "collection1"))
+	go func() {
+		t := time.NewTimer(0)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				StoreSnapshot()
+				t.Reset(10 * time.Second)
+			}
+		}
+	}()
+
+	go DeleteLoad(ctx)
+	go WriteLoad(ctx)
 
 	serve()
 }
@@ -67,8 +93,8 @@ type Snapshot struct {
 }
 
 func GetStats() CollStats {
-	res := TestDB.Database("foo").RunCommand(ctx, bson.M{
-		"collStats": "collection1",
+	res := TestDB.Database(TestDBName).RunCommand(ctx, bson.M{
+		"collStats": TestCollName,
 	})
 	grip.Error(res.Err())
 	stats := CollStats{}
@@ -92,12 +118,12 @@ func GetSnapshot() Snapshot {
 
 func StoreSnapshot() {
 	snapshot := GetSnapshot()
-	_, err := StatsDB.Database("snapshots").Collection("snapshots").InsertOne(ctx, snapshot)
+	_, err := StatsDB.Database(SnapshotDB).Collection(SnapshotCollection).InsertOne(ctx, snapshot)
 	grip.Error(err)
 }
 
 func GetSnapshots(db, collection string) []Snapshot {
-	cursor, err := StatsDB.Database("snapshots").Collection("snapshots").Find(ctx, bson.M{
+	cursor, err := StatsDB.Database(SnapshotDB).Collection(SnapshotCollection).Find(ctx, bson.M{
 		"db":         db,
 		"collection": collection,
 	}, options.Find().SetSort(bson.M{
@@ -118,4 +144,43 @@ func GetSnapshotsHandler(rw http.ResponseWriter, r *http.Request) {
 	grip.Error(err)
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Write(b)
+}
+
+func DeleteLoad(ctx context.Context) {
+	t := time.NewTimer(0)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			_, err := TestDB.Database(TestDBName).Collection(TestCollName).DeleteOne(ctx, bson.M{})
+			grip.Error(err)
+			n := rand.Intn(1000)
+			t.Reset(time.Duration(n) * time.Millisecond)
+		}
+	}
+}
+
+func WriteLoad(ctx context.Context) {
+	t := time.NewTimer(0)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+			size := rand.Intn(5000)
+			s := make([]rune, size)
+			for i := range s {
+				s[i] = letters[rand.Intn(len(letters))]
+			}
+			doc := bson.M{
+				"a": string(s),
+			}
+			_, err := TestDB.Database(TestDBName).Collection(TestCollName).InsertOne(ctx, doc)
+			grip.Error(err)
+			n := rand.Intn(900)
+			t.Reset(time.Duration(n) * time.Millisecond)
+		}
+	}
 }

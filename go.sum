@@ -165,6 +165,8 @@ github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2/go.mod h1:Ld9puTsI
 github.com/markbates/safe v1.0.1/go.mod h1:nAqgmRi7cY2nqMc92/bSEeQA+R4OheNU2T1kNSCBdG0=
 github.com/mattn/go-xmpp v0.0.0-20210121082723-b40e1294994d h1:LrXbX6iVhQ3Z50hnhTdyP4K60jevMzk/x2TpMYtOJqg=
 github.com/mattn/go-xmpp v0.0.0-20210121082723-b40e1294994d/go.mod h1:Cs5mF0OsrRRmhkyOod//ldNPOwJsrBvJ+1WRspv0xoc=
+github.com/mongodb/amboy v0.0.0-20210407181634-4ac2579777de h1:HpMZEeCDazwb5LxUvsrvqcCOtpwPjlIGbGuSh9p1xoo=
+github.com/mongodb/amboy v0.0.0-20210407181634-4ac2579777de/go.mod h1:SfpzZNF2KZUT5zO0/q4eUqW+EQe64MiY8xXmkBHZDqk=
 github.com/mongodb/grip v0.0.0-20210412171358-70a100cc5b73 h1:Ois0bb4/W2nKGGGX1BkTGFNTlCPeUz9DAnHbJ4M5TRM=
 github.com/mongodb/grip v0.0.0-20210412171358-70a100cc5b73/go.mod h1:g0r93iHSTLD50bDT7vNj+z+Y3nKz9o/tQXtB9esq2tk=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=

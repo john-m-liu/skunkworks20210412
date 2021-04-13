@@ -27,6 +27,7 @@ interface CollectionStats {
   size_total: number;
 
   size_total_kb: number;
+  size_data_kb: number;
 }
 
 interface Props {}
@@ -44,6 +45,7 @@ export const Timechart: React.FC<Props> = () => {
 
   snapshots = snapshots.map((s) => {
     s.stats.size_total_kb = toKbyte(s.stats.size_total);
+    s.stats.size_data_kb = toKbyte(s.stats.size_data);
     return s;
   });
 
@@ -54,7 +56,7 @@ export const Timechart: React.FC<Props> = () => {
       data={snapshots}
       margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
     >
-      <Line type="monotone" dataKey="stats.size_total_kb" stroke="#8884d8" />
+      <Line type="monotone" dataKey="stats.size_data_kb" stroke="#8884d8" />
       <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
       <XAxis
         dataKey="gathered_time_unix"
@@ -63,7 +65,7 @@ export const Timechart: React.FC<Props> = () => {
         domain={["auto", "auto"]}
       />
       <YAxis
-        dataKey="stats.size_total_kb"
+        dataKey="stats.size_data_kb"
         type="number"
         domain={["auto", "auto"]}
         label="Size (kb)"

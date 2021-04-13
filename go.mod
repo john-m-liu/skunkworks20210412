@@ -9,6 +9,7 @@ require (
 	github.com/fuyufjh/splunk-hec-go v0.3.3 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/mattn/go-xmpp v0.0.0-20210121082723-b40e1294994d // indirect
+	github.com/mongodb/amboy v0.0.0-20210407181634-4ac2579777de
 	github.com/mongodb/grip v0.0.0-20210412171358-70a100cc5b73
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shirou/gopsutil v3.21.3+incompatible // indirect
