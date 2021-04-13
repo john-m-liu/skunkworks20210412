@@ -46,10 +46,10 @@ export const SingleChart: React.FC<Props> = (props) => {
 
   return (
     <LineChart
-      width={1500}
-      height={800}
+      width={800}
+      height={400}
       data={data}
-      margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+      margin={{ top: 5, right: 0, bottom: 5, left: 0 }}
     >
       <Line
         type="monotone"

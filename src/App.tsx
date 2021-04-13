@@ -5,7 +5,7 @@ import "./App.css";
 function App() {
   return (
     <div className="App">
-      <H2>test</H2>
+      <H2>Collection Growth</H2>
       <Timechart></Timechart>
     </div>
   );

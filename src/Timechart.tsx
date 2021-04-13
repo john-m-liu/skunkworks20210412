@@ -1,6 +1,8 @@
 import { Option, Select } from "@leafygreen-ui/select";
 import { useEffect, useState } from "react";
 import { Metric, SingleChart, Snapshot } from "SingleChart";
+import { H3 } from "@leafygreen-ui/typography";
+import "./Timechart.css";
 
 const toKbyte = (size) => size / 1024;
 const noChange = (input) => input;
@@ -69,37 +71,54 @@ export const Timechart: React.FC<Props> = () => {
 
   return (
     <div>
-      <Select
-        label="Collection"
-        value={collection}
-        onChange={(val: Metric) => setCollection(val)}
-      >
-        {collections()}
-      </Select>
-      <SingleChart
-        Data={snapshots}
-        Metric="num_docs"
-        Label="Number"
-        Conversion={noChange}
-      ></SingleChart>
-      <SingleChart
-        Data={snapshots}
-        Metric="size_data"
-        Label="Size (kb)"
-        Conversion={toKbyte}
-      ></SingleChart>
-      <SingleChart
-        Data={snapshots}
-        Metric="size_storage"
-        Label="Size (kb)"
-        Conversion={toKbyte}
-      ></SingleChart>
-      <SingleChart
-        Data={snapshots}
-        Metric="size_indices"
-        Label="Size (kb)"
-        Conversion={toKbyte}
-      ></SingleChart>
+      <div className="top-row">
+        <H3>{`Database: ${snapshots[0].db}`}</H3>
+        <Select
+          label=""
+          value={collection}
+          onChange={(val: Metric) => setCollection(val)}
+        >
+          {collections()}
+        </Select>
+      </div>
+      <div className="grid-container">
+        <div className="top-left">
+          <H3>Number of Documents</H3>
+          <SingleChart
+            Data={snapshots}
+            Metric="num_docs"
+            Label=""
+            Conversion={noChange}
+          ></SingleChart>
+        </div>
+        <div className="top-right">
+          <H3>Data Size (uncompressed)</H3>
+          <SingleChart
+            Data={snapshots}
+            Metric="size_data"
+            Label="Size (kb)"
+            Conversion={toKbyte}
+          ></SingleChart>
+        </div>
+        <div className="bottom-left">
+          <H3>Data Size on Disk</H3>
+          <SingleChart
+            Data={snapshots}
+            Metric="size_storage"
+            Label="Size (kb)"
+            Conversion={toKbyte}
+          ></SingleChart>
+        </div>
+        <div className="bottom-right">
+          <H3>Index Size</H3>
+          <SingleChart
+            Data={snapshots}
+            Metric="size_indices"
+            Label="Size (kb)"
+            Conversion={toKbyte}
+          ></SingleChart>
+        </div>
+      </div>
     </div>
   );
 };
