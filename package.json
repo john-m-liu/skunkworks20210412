@@ -6,6 +6,7 @@
     "@leafygreen-ui/badge": "^4.0.3",
     "@leafygreen-ui/card": "^5.1.1",
     "@leafygreen-ui/leafygreen-provider": "^2.0.3",
+    "@leafygreen-ui/select": "^2.0.4",
     "@leafygreen-ui/typography": "^7.6.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
