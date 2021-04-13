@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -26,7 +27,6 @@ const (
 	SnapshotDB         = "snapshots"
 	SnapshotCollection = "snapshots"
 	TestDBName         = "foo"
-	TestCollName       = "collection1"
 )
 
 func main() {
@@ -92,9 +92,9 @@ type Snapshot struct {
 	Stats            CollStats `bson:"stats" json:"stats"`
 }
 
-func GetStats() CollStats {
+func GetStats(collName string) CollStats {
 	res := TestDB.Database(TestDBName).RunCommand(ctx, bson.M{
-		"collStats": TestCollName,
+		"collStats": collName,
 	})
 	grip.Error(res.Err())
 	stats := CollStats{}
@@ -102,9 +102,9 @@ func GetStats() CollStats {
 	return stats
 }
 
-func GetSnapshot() Snapshot {
+func GetSnapshot(collName string) Snapshot {
 	now := time.Now()
-	stats := GetStats()
+	stats := GetStats(collName)
 	pieces := strings.Split(stats.Collection, ".")
 	snapshot := Snapshot{
 		DB:           pieces[0],
@@ -117,9 +117,11 @@ func GetSnapshot() Snapshot {
 }
 
 func StoreSnapshot() {
-	snapshot := GetSnapshot()
-	_, err := StatsDB.Database(SnapshotDB).Collection(SnapshotCollection).InsertOne(ctx, snapshot)
-	grip.Error(err)
+	for i := 0; i < 10; i++ {
+		snapshot := GetSnapshot(fmt.Sprintf("collection%d", i))
+		_, err := StatsDB.Database(SnapshotDB).Collection(SnapshotCollection).InsertOne(ctx, snapshot)
+		grip.Error(err)
+	}
 }
 
 func GetSnapshots(db, collection string) []Snapshot {
@@ -139,7 +141,8 @@ func GetSnapshots(db, collection string) []Snapshot {
 }
 
 func GetSnapshotsHandler(rw http.ResponseWriter, r *http.Request) {
-	data := GetSnapshots("foo", "collection1")
+	coll := r.URL.Query().Get("collection")
+	data := GetSnapshots("foo", coll)
 	b, err := json.Marshal(data)
 	grip.Error(err)
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
@@ -153,9 +156,10 @@ func DeleteLoad(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			_, err := TestDB.Database(TestDBName).Collection(TestCollName).DeleteOne(ctx, bson.M{})
+			collName := fmt.Sprintf("collection%d", rand.Intn(9))
+			_, err := TestDB.Database(TestDBName).Collection(collName).DeleteOne(ctx, bson.M{})
 			grip.Error(err)
-			n := rand.Intn(1000)
+			n := rand.Intn(100)
 			t.Reset(time.Duration(n) * time.Millisecond)
 		}
 	}
@@ -177,9 +181,10 @@ func WriteLoad(ctx context.Context) {
 			doc := bson.M{
 				"a": string(s),
 			}
-			_, err := TestDB.Database(TestDBName).Collection(TestCollName).InsertOne(ctx, doc)
+			collName := fmt.Sprintf("collection%d", rand.Intn(9))
+			_, err := TestDB.Database(TestDBName).Collection(collName).InsertOne(ctx, doc)
 			grip.Error(err)
-			n := rand.Intn(900)
+			n := rand.Intn(90)
 			t.Reset(time.Duration(n) * time.Millisecond)
 		}
 	}
