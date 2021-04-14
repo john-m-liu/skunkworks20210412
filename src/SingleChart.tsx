@@ -39,9 +39,12 @@ interface Props {
 }
 
 export const SingleChart: React.FC<Props> = (props) => {
-  let data = props.Data.map((s) => {
-    s.stats.temp_display_metric = props.Conversion(s.stats[props.Metric]);
-    return s;
+  let data = [];
+  props.Data.map((s) => {
+    return data.push({
+      x: s.gathered_time_unix,
+      value: props.Conversion(s.stats[props.Metric]),
+    });
   });
 
   return (
@@ -53,28 +56,27 @@ export const SingleChart: React.FC<Props> = (props) => {
     >
       <Line
         type="monotone"
-        dataKey="stats.temp_display_metric"
+        dataKey="value"
         isAnimationActive={false}
         stroke="#8884d8"
       />
       <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
       <XAxis
-        dataKey="gathered_time_unix"
+        dataKey="x"
         tickFormatter={(unixTime) => moment.unix(unixTime).format("HH:mm:ss")}
         type="number"
         domain={["auto", "auto"]}
       />
       <YAxis
-        dataKey="stats.temp_display_metric"
+        dataKey="value"
         type="number"
         domain={["auto", "auto"]}
         label={props.Label}
         width={200}
       />
       <Tooltip
-        label="{timeTaken}"
         isAnimationActive={false}
-        labelFormatter={(name) => "Time Taken: "}
+        labelFormatter={(value) => moment.unix(value).format("HH:mm:ss")}
       />
     </LineChart>
   );

@@ -60,7 +60,6 @@ export const Timechart: React.FC<Props> = () => {
         .then((res) => res.json())
         .then((snapshots) => {
           setSnapshots(snapshots);
-          console.log(snapshots);
         });
     };
 
@@ -72,7 +71,7 @@ export const Timechart: React.FC<Props> = () => {
   return (
     <div>
       <div className="top-row">
-        <H3>{`Database: ${snapshots[0].db}`}</H3>
+        <H3>{`Database: ${snapshots && snapshots[0] && snapshots[0].db}`}</H3>
         <Select
           label=""
           value={collection}
